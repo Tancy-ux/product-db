@@ -89,7 +89,7 @@ export const addType = async (req, res) => {
 
 export const getSKUCode = async (req, res) => {
   try {
-    const { materialName, outerColor, innerColor, rimColor, typology } = req.body;
+    const { materialName, outerColor, innerColor, rimColor, typology, productName } = req.body;
 
     const material = await Material.findOne({ name: materialName });
     if (!material) {
@@ -105,15 +105,20 @@ export const getSKUCode = async (req, res) => {
     if(!type) {
       return res.status(200).json({ message: "Type not found" });
     }
-    const designCode = '000';
+    
+    const product = await Product.findOne({ name: productName });
+    if (!product) {
+      return res.status(200).json({ message: "Product not found" });
+    }
+    const designCode = product.design_code;
 
     const skuCode = `${material.code}${colorCode}${type.code}${designCode}`;
 
     const existingSKU = await Sku.findOne({ skuCode });
     if (existingSKU) {
-      return res.status(200).json({ message: "SKU code already exists", skuCode });
+      return res.status(200).json({ message: "SKU code exists: ", skuCode });
     }
-    const newSKU = new Sku({ skuCode, materialCode: material.code, colorCode, typeCode: type.code });
+    const newSKU = new Sku({ skuCode, materialCode: material.code, colorCode, typeCode: type.code, designCode });
     await newSKU.save();
 
     res.status(200).json({ message: "SKU code generated successfully", newSKU });
@@ -161,16 +166,14 @@ export const getAllColors = async (req, res) => {
 };
 
 export const getProductsByCategory = async (req, res) => {
-  const { category } = req.body;
-
+  const { category } = req.params;
   try {
-    const products = await Product.find({ category }).sort({ design_code: 1 }); // optional sort by code
+    const products = await Product.find({ category }).sort({ design_code: 1 }).select("name");
     res.status(200).json(products);
   } catch (error) {
     res.status(500).json({ message: "Error fetching products", error: error.message });
   }
 };
-
 
 export const addProduct = async (req, res) => {
   const { name, category} = req.body;
