@@ -2,7 +2,7 @@ import Color from "../models/Color.js";
 import Counter from "../models/Counter.js";
 import Material from "../models/Material.js";
 import Product from "../models/Product.js";
-import Sku from "../models/sku.js";
+import Sku from "../models/Sku.js";
 import Type from "../models/Type.js";
 
 export const getColorCode = async (req, res) => {
