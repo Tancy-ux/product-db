@@ -18,10 +18,10 @@ router.post("/get-sku", getSKUCode);
 router.post("/design-code", getDesignCode);
 router.post("/get-color-code", getColorCode);
 
-router.get("/cucol", getCutleryColors);
+router.get("/cutlery", getCutleryColors);
 router.post("/newcu", newCutleryColor);
 
-router.get("/getcol/:material", getColorByMaterial);
+router.get("/colors/:material", getColorByMaterial);
 router.post("/newcol", addColorByMaterial);
 
 export default router;

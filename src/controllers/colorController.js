@@ -4,7 +4,7 @@ import GeneralColor from "../models/GeneralColor.js";
 export const getCutleryColors = async(req, res) => {
     try {
         const colors = await CutleryColor.find().sort({code: 1});
-        res.json(colors);
+        res.status(200).json({ data: colors });
     } catch (error) {
         res.status(500).json({message: error.message})
     }
