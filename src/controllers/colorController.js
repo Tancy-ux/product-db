@@ -51,3 +51,49 @@ export const addColorByMaterial = async(req, res) => {
         res.status(500).json({message: error.message});
     }
 }
+
+export const getMaterialCode = async (req, res) => {
+    try {
+      const { material, color } = req.body;
+  
+      const colorData = await GeneralColor.findOne({ material, color});
+  
+      if (colorData) {
+        return res.status(200).json({ exists: true, data: colorData.code });
+      }
+  
+      return res.status(200).json({
+        exists: false,
+        message: "Color combination does not exist! Please create it first."
+      });
+  
+    } catch (error) {
+      return res.status(500).json({
+        message: "Internal server error",
+        error: error.message
+      });
+    }
+  };
+
+  export const getCutleryCode = async (req, res) => {
+    try {
+      const { handleColor, finishColor} = req.body;
+  
+      const colorData = await GeneralColor.findOne({ handleColor, finishColor});
+  
+      if (colorData) {
+        return res.status(200).json({ exists: true, data: colorData.code });
+      }
+  
+      return res.status(200).json({
+        exists: false,
+        message: "Color combination does not exist! Please create it first."
+      });
+  
+    } catch (error) {
+      return res.status(500).json({
+        message: "Internal server error",
+        error: error.message
+      });
+    }
+  };
