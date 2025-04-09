@@ -28,6 +28,6 @@ router.get("/colors/:material", getColorByMaterial);
 router.post("/newcol", addColorByMaterial);
 
 router.post("/add-base", addBaseColor);
-router.post("/get-base", getAllBase);
+router.get("/get-base", getAllBase);
 
 export default router;
