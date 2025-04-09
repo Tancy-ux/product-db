@@ -17,13 +17,12 @@ export const getColorCode = async (req, res) => {
 
     return res.status(200).json({
       exists: false,
-      message: "Color combination does not exist! Please create it first."
+      message: "Color combination does not exist! Please create it first.",
     });
-
   } catch (error) {
     return res.status(500).json({
       message: "Internal server error",
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -36,8 +35,10 @@ export const addNewColorCode = async (req, res) => {
       innerColor,
       rimColor,
     });
-    if(color) {
-      return res.status(200).json({ message: "Color code already exists!", data: color.code });
+    if (color) {
+      return res
+        .status(200)
+        .json({ message: "Color code already exists!", data: color.code });
     }
     // If no color code is found, create a new one
     let lastColor = await Color.findOne().sort({ code: -1 });
@@ -50,62 +51,82 @@ export const addNewColorCode = async (req, res) => {
       code: nextCode,
     });
     await newColor.save();
-    return res.status(200).json({ message: "Color code generated successfully", colorCode: newColor.code });
+    return res.status(200).json({
+      message: "Color code generated successfully",
+      colorCode: newColor.code,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Internal server error", error: error.message });   
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
-}
+};
 
 export const addMaterial = async (req, res) => {
-    try {
-        const {name, code} = req.body;
+  try {
+    const { name, code } = req.body;
 
-        let exists = await Material.findOne({name: name});
-        if (exists) {
-            return res.status(400).json({message: "Material already exists"});
-        }
-        const newMaterial = new Material({name, code});
-        await newMaterial.save();
-        res.status(200).json({message: "Material added successfully", data: newMaterial});
-    } catch (error) {
-        res.status(500).json({message: "Internal server error", error: error.message});
+    let exists = await Material.findOne({ name: name });
+    if (exists) {
+      return res.status(400).json({ message: "Material already exists" });
     }
-}
+    const newMaterial = new Material({ name, code });
+    await newMaterial.save();
+    res
+      .status(200)
+      .json({ message: "Material added successfully", data: newMaterial });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
+  }
+};
 
 export const addType = async (req, res) => {
-    try {
-        const {name, code} = req.body;
-        let existsType = await Type.findOne({name: name});
-        if (existsType) {
-            return res.status(400).json({message: "Type already exists"});
-        }
-        const newType = new Type({name, code});
-        await newType.save();
-        res.status(200).json({message: "Type added successfully", data: newType});
-    } catch (error) {
-        res.status(500).json({message: "Internal server error", error: error.message});
+  try {
+    const { name, code } = req.body;
+    let existsType = await Type.findOne({ name: name });
+    if (existsType) {
+      return res.status(400).json({ message: "Type already exists" });
     }
-}
+    const newType = new Type({ name, code });
+    await newType.save();
+    res.status(200).json({ message: "Type added successfully", data: newType });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
+  }
+};
 
 export const getSKUCode = async (req, res) => {
   try {
-    const { materialName, outerColor, innerColor, rimColor, typology, productName } = req.body;
+    const {
+      materialName,
+      outerColor,
+      innerColor,
+      rimColor,
+      typology,
+      productName,
+    } = req.body;
+    let colorCode;
 
     const material = await Material.findOne({ name: materialName });
     if (!material) {
       return res.status(200).json({ message: "Material not found" });
     }
+
     let color = await Color.findOne({ outerColor, innerColor, rimColor });
     if (!color) {
       return res.status(200).json({ message: "Color combination not found!" });
     }
-    let colorCode = color.code.toString().padStart(3, '0');
+    colorCode = color.code.toString().padStart(3, "0");
 
     const type = await Type.findOne({ name: typology });
-    if(!type) {
+    if (!type) {
       return res.status(200).json({ message: "Type not found" });
     }
-    
+
     const product = await Product.findOne({ name: productName });
     if (!product) {
       return res.status(200).json({ message: "Product not found" });
@@ -118,32 +139,49 @@ export const getSKUCode = async (req, res) => {
     if (existingSKU) {
       return res.status(200).json({ message: "SKU code exists: ", skuCode });
     }
-    const newSKU = new Sku({ skuCode, materialCode: material.code, colorCode, typeCode: type.code, designCode });
+    const newSKU = new Sku({
+      skuCode,
+      materialCode: material.code,
+      colorCode,
+      typeCode: type.code,
+      designCode,
+    });
     await newSKU.save();
 
-    res.status(200).json({ message: "SKU code generated successfully", newSKU });
-
+    res
+      .status(200)
+      .json({ message: "SKU code generated successfully", newSKU });
   } catch (error) {
-    res.status(500).json({ message: "Internal server error", error: error.message });    
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
-}
+};
 
 export const getAllMaterials = async (req, res) => {
   try {
     const materials = await Material.find();
-    res.status(200).json({ message: "Materials fetched successfully", data: materials });
+    res
+      .status(200)
+      .json({ message: "Materials fetched successfully", data: materials });
   } catch (error) {
-    res.status(500).json({ message: "Internal server error", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
-}
+};
 export const getAllTypes = async (req, res) => {
   try {
     const types = await Type.find();
-    res.status(200).json({ message: "Types fetched successfully", data: types });
+    res
+      .status(200)
+      .json({ message: "Types fetched successfully", data: types });
   } catch (error) {
-    res.status(500).json({ message: "Internal server error", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
-}
+};
 
 // This function fetches all unique colors from the Color model
 export const getAllColors = async (req, res) => {
@@ -157,32 +195,38 @@ export const getAllColors = async (req, res) => {
       data: {
         outerColors,
         innerColors,
-        rimColors
-      }
+        rimColors,
+      },
     });
   } catch (error) {
-    res.status(500).json({ message: "Internal server error", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
 };
 
 export const getProductsByCategory = async (req, res) => {
   const { category } = req.params;
   try {
-    const products = await Product.find({ category }).sort({ design_code: 1 }).select("name design_code");
+    const products = await Product.find({ category })
+      .sort({ design_code: 1 })
+      .select("name design_code");
     res.status(200).json(products);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching products", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error fetching products", error: error.message });
   }
 };
 
 export const addProduct = async (req, res) => {
-  const { name, category} = req.body;
+  const { name, category } = req.body;
   try {
     let exists = await Product.findOne({ name: name });
     if (exists) {
       return res.status(400).json({ message: "Product already exists!" });
     }
-    
+
     let counter = await Counter.findOne({ category });
 
     if (!counter) {
@@ -194,32 +238,37 @@ export const addProduct = async (req, res) => {
     const product = new Product({
       name,
       category,
-      design_code: counter.last_code
+      design_code: counter.last_code,
     });
     await product.save();
-    return res.status(200).json({ message: "Product added successfully", data: product });
+    return res
+      .status(200)
+      .json({ message: "Product added successfully", data: product });
   } catch (error) {
-    return res.status(500).json({ message: "Internal server error", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
-}
+};
 
 export const getDesignCode = async (req, res) => {
   try {
-    const {productName} = req.body;
+    const { productName } = req.body;
     if (!productName) {
       return res.status(400).json({ message: "Product name is required" });
     }
-    const product = await Product.findOne({name: productName});
+    const product = await Product.findOne({ name: productName });
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
-    return res.status(200).json({ 
+    return res.status(200).json({
       success: true,
       message: "Design code fetched successfully",
-      designCode: product.design_code 
+      designCode: product.design_code,
     });
-
   } catch (error) {
-    return res.status(500).json({ message: "Internal server error", error: error.message });    
+    return res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
-}
+};

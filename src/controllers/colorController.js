@@ -1,3 +1,4 @@
+import Color from "../models/Color.js";
 import CutleryColor from "../models/CutleryColor.js";
 import GeneralColor from "../models/GeneralColor.js";
 
@@ -97,3 +98,12 @@ export const getMaterialCode = async (req, res) => {
       });
     }
   };
+
+export const getAllColorEntries = async (req, res) => {
+    try {
+      const colors = await Color.find().sort({code: 1});
+      res.status(200).json({ data: colors });
+    } catch (error) {
+      res.status(500).json({message: error.message});
+    }
+  }
