@@ -1,5 +1,5 @@
 import e from "express";
-import { getColorCode, addMaterial, addType, getSKUCode, getAllMaterials, getAllTypes, getAllColors, addNewColorCode, addProduct, getProductsByCategory, getDesignCode } from "../controllers/skuController.js";
+import { getColorCode, addMaterial, addType, getSKUCode, getAllMaterials, getAllTypes, getAllColors, addNewColorCode, addProduct, getProductsByCategory, getDesignCode, updateProduct } from "../controllers/skuController.js";
 import { addBaseColor, addColorByMaterial, getAllBase, getAllColorEntries, getColorByMaterial, getCutleryCode, getCutleryColors, getMaterialCode, newCutleryColor } from "../controllers/colorController.js";
 
 const router = e.Router();
@@ -14,6 +14,8 @@ router.post("/add-type", addType);
 router.post("/add-product", addProduct);
 router.post("/add-material", addMaterial);
 router.post("/add-color", addNewColorCode);
+
+router.put("/update-product/:id", updateProduct);
 
 router.post("/get-sku", getSKUCode);
 router.post("/design-code", getDesignCode);

@@ -251,6 +251,37 @@ export const addProduct = async (req, res) => {
   }
 };
 
+export const updateProduct = async (req, res) => {
+  const { id } = req.params;
+  const { name } = req.body;
+  try {
+    const existProduct = await Product.findOne({ name });
+    if (existProduct) {
+      return res.status(404).json({ message: "Product name exists" });
+    }
+    const product = await Product.findByIdAndUpdate(
+      id,
+      { name },
+      { new: true }
+    );
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+    res.status(200).json({
+      message: "Product updated successfully",
+      data: {
+        name: product.name,
+        category: product.category,
+        design_code: product.design_code,
+      },
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
+  }
+};
+
 export const getDesignCode = async (req, res) => {
   try {
     const { productName } = req.body;
