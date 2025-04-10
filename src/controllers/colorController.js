@@ -4,7 +4,6 @@ import CutleryColor from "../models/CutleryColor.js";
 import GeneralColor from "../models/GeneralColor.js";
 import Material from "../models/Material.js";
 import Product from "../models/Product.js";
-import Sku from "../models/Sku.js";
 import Type from "../models/Type.js";
 
 export const getCutleryColors = async (req, res) => {
@@ -141,18 +140,23 @@ export const getAllBase = async (req, res) => {
 
 export const getMaterialSkuCode = async (req, res) => {
   try {
-    const {materialName, colour, typology, productName} = req.body;
+    const { materialName, colour, typology, productName } = req.body;
 
     const material = await Material.findOne({ name: materialName });
     if (!material) {
-      return res.status(404).json({ message: "Material not found" });
+      return res
+        .status(404)
+        .json({ message: "Material not found", data: material });
     }
 
-    let color = await GeneralColor.findOne({ material: materialName, color: colour});
+    let color = await GeneralColor.findOne({
+      material: materialName,
+      color: colour,
+    });
     if (!color) {
-      return res.status(404).json({ message: "Color not found!" });
+      return res.status(404).json({ message: "Color not found!", data: color });
     }
-    colorCode = color.code.toString().padStart(3, "0");
+    let colorCode = color.code.toString().padStart(3, "0");
 
     const type = await Type.findOne({ name: typology });
     if (!type) {
@@ -168,8 +172,8 @@ export const getMaterialSkuCode = async (req, res) => {
     const skuCode = `${material.code}${colorCode}${type.code}${designCode}`;
     res
       .status(200)
-      .json({ message: "SKU code generated successfully", skuCode });
+      .json({ message: "SKU code generated successfully", data: skuCode });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
-}
+};
