@@ -5,7 +5,7 @@ const skuSchema = new mongoose.Schema({
     colorCode: String,
     typeCode: String,
     skuCode: String,
-    designCode: String,
+    productName: String,
 });
 
 const Sku = mongoose.model("Sku", skuSchema);
