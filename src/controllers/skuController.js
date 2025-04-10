@@ -256,9 +256,10 @@ export const updateProduct = async (req, res) => {
   const { name } = req.body;
   try {
     const existProduct = await Product.findOne({ name });
-    if (existProduct) {
-      return res.status(404).json({ message: "Product name exists" });
+    if (existProduct && existProduct._id.toString() !== id) {
+      return res.status(409).json({ message: "Product name exists" });
     }
+
     const product = await Product.findByIdAndUpdate(
       id,
       { name },
