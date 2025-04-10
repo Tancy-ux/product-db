@@ -142,7 +142,7 @@ export const getSKUCode = async (req, res) => {
     const newSKU = new Sku({
       skuCode,
       materialCode: material.code,
-      colorCode,
+      color: color.innerColor,
       typeCode: type.code,
       productName: product.name,
     });
@@ -157,6 +157,15 @@ export const getSKUCode = async (req, res) => {
       .json({ message: "Internal server error", error: error.message });
   }
 };
+
+export const getAllCodes = async (req, res) => {
+  try {
+    const codes = await Sku.find();
+    res.status(200).json({ message: "Codes fetched successfully", data: codes });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+}
 
 export const getAllMaterials = async (req, res) => {
   try {
