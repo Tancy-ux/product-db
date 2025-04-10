@@ -141,7 +141,7 @@ export const getSKUCode = async (req, res) => {
     }
     const newSKU = new Sku({
       skuCode,
-      materialCode: material.code,
+      materialCode: materialName,
       colorCode,
       typeCode: type.code,
       designCode,
