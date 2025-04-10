@@ -2,6 +2,10 @@ import BaseColor from "../models/BaseColor.js";
 import Color from "../models/Color.js";
 import CutleryColor from "../models/CutleryColor.js";
 import GeneralColor from "../models/GeneralColor.js";
+import Material from "../models/Material.js";
+import Product from "../models/Product.js";
+import Sku from "../models/Sku.js";
+import Type from "../models/Type.js";
 
 export const getCutleryColors = async (req, res) => {
   try {
@@ -134,3 +138,52 @@ export const getAllBase = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const getMaterialSkuCode = async (req, res) => {
+  try {
+    const {materialName, colour, typology, productName} = req.body;
+
+    const material = await Material.findOne({ name: materialName });
+    if (!material) {
+      return res.status(200).json({ message: "Material not found" });
+    }
+
+    let color = await GeneralColor.findOne({ material: materialName, color: colour});
+    if (!color) {
+      return res.status(200).json({ message: "Color not found!" });
+    }
+    colorCode = color.code.toString().padStart(3, "0");
+
+    const type = await Type.findOne({ name: typology });
+    if (!type) {
+      return res.status(200).json({ message: "Type not found" });
+    }
+
+    const product = await Product.findOne({ name: productName });
+    if (!product) {
+      return res.status(200).json({ message: "Product not found" });
+    }
+    const designCode = product.design_code;
+
+    const skuCode = `${material.code}${colorCode}${type.code}${designCode}`;
+
+    const existingSKU = await Sku.findOne({ skuCode });
+    if (existingSKU) {
+      return res.status(200).json({ message: "SKU code exists: ", skuCode });
+    }
+    const newSKU = new Sku({
+      skuCode,
+      materialCode: material.code,
+      colorCode,
+      typeCode: type.code,
+      designCode,
+    });
+    await newSKU.save();
+
+    res
+      .status(200)
+      .json({ message: "SKU code generated successfully", newSKU });
+  } catch (error) {
+    res.status()
+  }
+}
