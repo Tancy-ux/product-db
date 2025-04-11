@@ -5,6 +5,7 @@ import GeneralColor from "../models/GeneralColor.js";
 import Material from "../models/Material.js";
 import Product from "../models/Product.js";
 import Type from "../models/Type.js";
+import Sku from "../models/Sku.js";
 
 export const getCutleryColors = async (req, res) => {
   try {
@@ -170,6 +171,19 @@ export const getMaterialSkuCode = async (req, res) => {
     const designCode = product.design_code;
 
     const skuCode = `${material.code}${colorCode}${type.code}${designCode}`;
+    
+    const existingSKU = await Sku.findOne({ skuCode });
+    if (existingSKU) {
+      return res.status(200).json({ message: "SKU code exists: ", skuCode });
+    }
+    const newSKU = new Sku({
+      skuCode,
+      materialCode: material.code,
+      color,
+      typeCode: type.code,
+      productName: product.name,
+    });
+    await newSKU.save();
     res
       .status(200)
       .json({ message: "SKU code generated successfully", data: skuCode });
