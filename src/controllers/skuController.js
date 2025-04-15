@@ -113,23 +113,23 @@ export const getSKUCode = async (req, res) => {
 
     const material = await Material.findOne({ name: materialName });
     if (!material) {
-      return res.status(200).json({ message: "Material not found" });
+      return res.status(400).json({ message: "Material not found" });
     }
 
     let color = await Color.findOne({ outerColor, innerColor, rimColor });
     if (!color) {
-      return res.status(200).json({ message: "Color combination not found!" });
+      return res.status(400).json({ message: "Color combination not found!" });
     }
     colorCode = color.code.toString().padStart(3, "0");
 
     const type = await Type.findOne({ name: typology });
     if (!type) {
-      return res.status(200).json({ message: "Type not found" });
+      return res.status(400).json({ message: "Type not found" });
     }
 
     const product = await Product.findOne({ name: productName });
     if (!product) {
-      return res.status(200).json({ message: "Product not found" });
+      return res.status(400).json({ message: "Product not found" });
     }
     const designCode = product.design_code;
 
