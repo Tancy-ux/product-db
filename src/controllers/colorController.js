@@ -186,7 +186,7 @@ export const getMaterialSkuCode = async (req, res) => {
     await newSKU.save();
     res
       .status(200)
-      .json({ message: "SKU code generated successfully", data: skuCode });
+      .json({ message: "SKU code generated successfully", data: newSKU });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
