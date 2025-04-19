@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 const existingSkuSchema = new mongoose.Schema({
     name: String,
     color: String,
+    typeCode: String,
     code: String
 });
 
