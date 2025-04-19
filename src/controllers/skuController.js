@@ -1,5 +1,6 @@
 import Color from "../models/Color.js";
 import Counter from "../models/Counter.js";
+import ExistingSku from "../models/ExistingSku.js";
 import Material from "../models/Material.js";
 import Product from "../models/Product.js";
 import Sku from "../models/Sku.js";
@@ -313,3 +314,12 @@ export const getDesignCode = async (req, res) => {
       .json({ message: "Internal server error", error: error.message });
   }
 };
+
+export const getOldSkuCodes = async (req, res) => {
+  try {
+    const oldsku = await ExistingSku.find();
+    res.status(200).json({ message: "Old SKU codes fetched successfully", data: oldsku });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error", error: error.message });
+  }
+}
