@@ -191,3 +191,13 @@ export const getMaterialSkuCode = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+export const deleteSku = async (req, res) => {
+  try {
+    const { skuCode } = req.body;
+    const sku = await Sku.findOneAndDelete({ skuCode });
+    res.status(200).json({ message: "SKU deleted successfully", data: sku });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
