@@ -201,3 +201,13 @@ export const deleteSku = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+export const deleteProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const product = await Product.findOneAndDelete({ _id: id });
+    res.status(200).json({ message: "Product deleted successfully", data: product });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};

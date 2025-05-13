@@ -1,6 +1,6 @@
 import e from "express";
 import { getColorCode, addMaterial, addType, getSKUCode, getAllMaterials, getAllTypes, getAllColors, addNewColorCode, addProduct, getProductsByCategory, getDesignCode, updateProduct, getAllCodes, getOldSkuCodes } from "../controllers/skuController.js";
-import { addBaseColor, addColorByMaterial, deleteSku, getAllBase, getAllColorEntries, getColorByMaterial, getCutleryCode, getCutleryColors, getMaterialCode, getMaterialSkuCode, newCutleryColor } from "../controllers/colorController.js";
+import { addBaseColor, addColorByMaterial, deleteProduct, deleteSku, getAllBase, getAllColorEntries, getColorByMaterial, getCutleryCode, getCutleryColors, getMaterialCode, getMaterialSkuCode, newCutleryColor } from "../controllers/colorController.js";
 
 const router = e.Router();
 
@@ -35,5 +35,6 @@ router.post("/add-base", addBaseColor);
 router.get("/get-base", getAllBase);
 
 router.delete("/del-sku", deleteSku);
+router.delete("/del-product/:id", deleteProduct);
 
 export default router;
