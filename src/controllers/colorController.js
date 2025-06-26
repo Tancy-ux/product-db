@@ -271,22 +271,24 @@ export const getPricing = async (req, res) => {
 export const updatePricing = async (req, res) => {
    try {
     const { id } = req.params;
-    const { makingPriceExclGst, deliveryCharges, sellingPriceExclGst } = req.body;
+    const { makingPriceExclGst, deliveryCharges, sellingPriceExclGst, gstRate } = req.body;
 
     const cp = parseFloat(makingPriceExclGst);
     const dc = parseFloat(deliveryCharges);
     const sp = parseFloat(sellingPriceExclGst);
+    const gst = parseFloat(gstRate);
+    const cogs = ((cp / sp) * 100).toFixed(2);
 
     const updated = await Pricing.findByIdAndUpdate(
       id,
       {
         makingPriceExclGst: cp,
-        makingPriceInclGst: cp * 1.18,
+        makingPriceInclGst: cp * gst,
         deliveryCharges: dc,
         totalCost: dc > 0 ? (cp + dc) : cp,
         sellingPriceExclGst: sp,
         sellingPriceInclGst: sp * 1.18,
-        cogs: (cp / sp) * 100,
+        cogs
       },
       { new: true }
     );
