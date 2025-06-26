@@ -254,7 +254,7 @@ export const addPricing = async (req, res) => {
     });
 
     await newPricing.save();
-    res.status(201).json({ message: "New Pricing added successfully" });
+    res.status(201).json({ message: "New Pricing added successfully", data: newPricing });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
