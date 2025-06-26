@@ -261,10 +261,9 @@ export const addPricing = async (req, res) => {
 
 export const getPricing = async (req, res) => {
   try {
-    const { skuCode } = req.params;
-    const pricing = await Pricing.findOne({ skuCode });
-    res.status(200).json(pricing);
+    const allPricing = await Pricing.find();
+    res.status(200).json(allPricing);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-}
+};
