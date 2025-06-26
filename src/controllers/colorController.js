@@ -253,7 +253,7 @@ export const addPricing = async (req, res) => {
     });
 
     await newPricing.save();
-    res.status(201).json(newPricing);
+    res.status(201).json({ message: "New Pricing added successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -263,6 +263,46 @@ export const getPricing = async (req, res) => {
   try {
     const allPricing = await Pricing.find();
     res.status(200).json(allPricing);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const updatePricing = async (req, res) => {
+   try {
+    const { id } = req.params;
+    const { makingPriceExclGst, deliveryCharges, sellingPriceExclGst } = req.body;
+
+    const cp = parseFloat(makingPriceExclGst);
+    const dc = parseFloat(deliveryCharges);
+    const sp = parseFloat(sellingPriceExclGst);
+
+    const updated = await Pricing.findByIdAndUpdate(
+      id,
+      {
+        makingPriceExclGst: cp,
+        makingPriceInclGst: cp * 1.18,
+        deliveryCharges: dc,
+        totalCost: cp + dc,
+        sellingPriceExclGst: sp,
+        sellingPriceInclGst: sp * 1.18,
+        cogs: (cp / sp) * 100,
+      },
+      { new: true }
+    );
+
+    res.json(updated);
+    res.status(200).json({ message: "Pricing updated successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+}
+
+export const deletePricing = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await Pricing.findByIdAndDelete(id);
+    res.status(200).json({ message: "Pricing deleted successfully", data: deleted });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
