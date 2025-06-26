@@ -6,6 +6,7 @@ import Material from "../models/Material.js";
 import Product from "../models/Product.js";
 import Type from "../models/Type.js";
 import Sku from "../models/Sku.js";
+import Pricing from "../models/Pricing.js";
 
 export const getCutleryColors = async (req, res) => {
   try {
@@ -211,3 +212,59 @@ export const deleteProduct = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+export const addGeneralColor = async (req, res) => {
+  try {
+    const { material, color, code } = req.body;
+    const exists = await GeneralColor.findOne({ material, color });
+    if (exists) {
+      return res.status(400).json({ message: "Color already exists" });
+    }
+    const newColor = new GeneralColor({ material, color, code });
+    await newColor.save();
+    res.status(201).json(newColor);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
+
+export const addPricing = async (req, res) => {
+  try {
+    const { skuCode, makingPriceExclGst, deliveryCharges, sellingPriceExclGst } = req.body;
+
+    const cp = parseFloat(makingPriceExclGst);
+    const dc = parseFloat(deliveryCharges);
+    const sp = parseFloat(sellingPriceExclGst);
+
+    const makingPriceInclGst = cp * 1.18;
+    const sellingPriceInclGst = sp * 1.18;
+    const totalCost = cp + dc;
+    const cogs = (cp / sp) * 100;
+
+    const newPricing = new Pricing({
+      skuCode,
+      makingPriceExclGst: cp,
+      makingPriceInclGst,
+      deliveryCharges: dc,
+      totalCost,
+      sellingPriceExclGst: sp,
+      sellingPriceInclGst,
+      cogs,
+    });
+
+    await newPricing.save();
+    res.status(201).json(newPricing);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getPricing = async (req, res) => {
+  try {
+    const { skuCode } = req.params;
+    const pricing = await Pricing.findOne({ skuCode });
+    res.status(200).json(pricing);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
