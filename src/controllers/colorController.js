@@ -283,7 +283,7 @@ export const updatePricing = async (req, res) => {
         makingPriceExclGst: cp,
         makingPriceInclGst: cp * 1.18,
         deliveryCharges: dc,
-        totalCost: cp + dc,
+        totalCost: dc > 0 ? (cp + dc) : cp,
         sellingPriceExclGst: sp,
         sellingPriceInclGst: sp * 1.18,
         cogs: (cp / sp) * 100,

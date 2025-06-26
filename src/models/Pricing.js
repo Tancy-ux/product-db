@@ -4,7 +4,10 @@ const pricingSchema = new mongoose.Schema({
     skuCode: String,
     makingPriceExclGst: Number,
     makingPriceInclGst: Number,
-    deliveryCharges: Number,
+    deliveryCharges: {
+        type: Number,
+        default: 0
+    },
     totalCost: Number,
     sellingPriceExclGst: Number,
     sellingPriceInclGst: Number,
