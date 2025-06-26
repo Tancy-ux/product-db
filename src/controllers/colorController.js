@@ -230,13 +230,14 @@ export const addGeneralColor = async (req, res) => {
 
 export const addPricing = async (req, res) => {
   try {
-    const { skuCode, makingPriceExclGst, deliveryCharges, sellingPriceExclGst } = req.body;
+    const { skuCode, makingPriceExclGst, deliveryCharges, sellingPriceExclGst, gstRate } = req.body;
 
     const cp = parseFloat(makingPriceExclGst);
     const dc = parseFloat(deliveryCharges);
     const sp = parseFloat(sellingPriceExclGst);
+    const gst = parseFloat(gstRate);
 
-    const makingPriceInclGst = cp * 1.18;
+    const makingPriceInclGst = cp * gst;
     const sellingPriceInclGst = sp * 1.18;
     const totalCost = cp + dc;
     const cogs = (cp / sp) * 100;
@@ -271,19 +272,18 @@ export const getPricing = async (req, res) => {
 export const updatePricing = async (req, res) => {
    try {
     const { id } = req.params;
-    const { makingPriceExclGst, deliveryCharges, sellingPriceExclGst, gstRate } = req.body;
+    const { makingPriceExclGst, deliveryCharges, sellingPriceExclGst } = req.body;
 
     const cp = parseFloat(makingPriceExclGst);
     const dc = parseFloat(deliveryCharges);
     const sp = parseFloat(sellingPriceExclGst);
-    const gst = parseFloat(gstRate);
     const cogs = ((cp / sp) * 100).toFixed(2);
 
     const updated = await Pricing.findByIdAndUpdate(
       id,
       {
         makingPriceExclGst: cp,
-        makingPriceInclGst: cp * gst,
+        makingPriceInclGst: cp * 1.18,
         deliveryCharges: dc,
         totalCost: dc > 0 ? (cp + dc) : cp,
         sellingPriceExclGst: sp,
