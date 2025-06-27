@@ -230,25 +230,15 @@ export const addGeneralColor = async (req, res) => {
 
 export const addPricing = async (req, res) => {
   try {
-    const { skuCode, makingPriceExclGst, deliveryCharges, sellingPriceExclGst, gstRate } = req.body;
-
-    const cp = parseFloat(makingPriceExclGst);
-    const dc = parseFloat(deliveryCharges);
-    const sp = parseFloat(sellingPriceExclGst);
-    const gst = parseFloat(gstRate);
-
-    const makingPriceInclGst = cp * gst;
-    const sellingPriceInclGst = sp * 1.18;
-    const totalCost = cp + dc;
-    const cogs = (cp / sp) * 100;
+    const { skuCode, makingPriceExclGst, deliveryCharges, sellingPriceExclGst, makingPriceInclGst, sellingPriceInclGst, totalCost, cogs } = req.body;
 
     const newPricing = new Pricing({
       skuCode,
-      makingPriceExclGst: cp,
+      makingPriceExclGst,
       makingPriceInclGst,
-      deliveryCharges: dc,
+      deliveryCharges,
       totalCost,
-      sellingPriceExclGst: sp,
+      sellingPriceExclGst,
       sellingPriceInclGst,
       cogs,
     });
