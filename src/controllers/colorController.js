@@ -260,35 +260,43 @@ export const getPricing = async (req, res) => {
 };
 
 export const updatePricing = async (req, res) => {
-   try {
+  try {
     const { id } = req.params;
-    const { makingPriceExclGst, deliveryCharges, sellingPriceExclGst } = req.body;
+    const {
+      makingPriceExclGst,
+      deliveryCharges,
+      sellingPriceExclGst,
+      gstRate,
+    } = req.body;
 
     const cp = parseFloat(makingPriceExclGst);
     const dc = parseFloat(deliveryCharges);
     const sp = parseFloat(sellingPriceExclGst);
+    const gst = parseFloat(gstRate) || 1.18; // fallback to 18% if missing
+
     const cogs = ((cp / sp) * 100).toFixed(2);
 
     const updated = await Pricing.findByIdAndUpdate(
       id,
       {
         makingPriceExclGst: cp,
-        makingPriceInclGst: cp * 1.18,
+        makingPriceInclGst: (cp * gst).toFixed(2),
         deliveryCharges: dc,
-        totalCost: dc > 0 ? (cp + dc) : cp,
+        totalCost: dc > 0 ? (cp + dc).toFixed(2) : cp.toFixed(2),
         sellingPriceExclGst: sp,
-        sellingPriceInclGst: sp * 1.18,
-        cogs
+        sellingPriceInclGst: (sp * gst).toFixed(2),
+        gstRate: gst,
+        cogs,
       },
       { new: true }
     );
 
-    res.json(updated);
-    res.status(200).json({ message: "Pricing updated successfully" });
+    res.status(200).json(updated);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
-}
+};
+
 
 export const deletePricing = async (req, res) => {
   try {
