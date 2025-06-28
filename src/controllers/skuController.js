@@ -323,3 +323,35 @@ export const getOldSkuCodes = async (req, res) => {
     res.status(500).json({ message: "Internal server error", error: error.message });
   }
 }
+
+export const editOldSku = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { code } = req.body;
+
+    if (!id || !code) {
+      return res.status(400).json({ message: "ID and code are required" });
+    }
+
+    const updatedSku = await ExistingSku.findByIdAndUpdate(
+      id,
+      { code },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedSku) {
+      return res.status(404).json({ message: "SKU not found" });
+    }
+
+    res.status(200).json({
+      message: "SKU code edited successfully",
+      data: updatedSku
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      message: "Internal server error",
+      error: error.message
+    });
+  }
+};
