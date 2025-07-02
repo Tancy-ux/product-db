@@ -36,7 +36,7 @@ router.post("/newcol", addColorByMaterial);
 router.post("/add-base", addBaseColor);
 router.get("/get-base", getAllBase);
 
-router.delete("/del-sku", deleteSku);
+router.delete("/del-sku/:skuCode", deleteSku);
 router.delete("/del-product/:id", deleteProduct);
 
 router.post("/add-gen-color", addGeneralColor);
