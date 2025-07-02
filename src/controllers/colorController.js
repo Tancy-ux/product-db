@@ -7,6 +7,7 @@ import Product from "../models/Product.js";
 import Type from "../models/Type.js";
 import Sku from "../models/Sku.js";
 import Pricing from "../models/Pricing.js";
+import ExistingSku from "../models/ExistingSku.js";
 
 export const getCutleryColors = async (req, res) => {
   try {
@@ -198,10 +199,9 @@ export const deleteSku = async (req, res) => {
     const { skuCode } = req.params;
 
     let sku = await Sku.findOneAndDelete({ skuCode });
-    if (!sku) {
-      sku = await ExistingSku.findOneAndDelete({ code: skuCode }); // Assuming ExistingSku uses 'code' field
-    }
-    if (!sku) {
+    let oldsku = await ExistingSku.findOneAndDelete({ code: skuCode });
+    
+    if (!sku || !oldsku) {
       return res.status(404).json({ message: "SKU not found in either collection" });
     }
 
