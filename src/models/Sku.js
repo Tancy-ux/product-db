@@ -2,7 +2,9 @@ import mongoose from "mongoose";
 
 const skuSchema = new mongoose.Schema({
     materialCode: String,
-    color: String,
+    color_i: String,
+    color_o: String,
+    color_r: String,
     typeCode: String,
     skuCode: String,
     productName: String,

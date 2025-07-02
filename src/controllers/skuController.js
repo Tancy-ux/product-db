@@ -143,7 +143,9 @@ export const getSKUCode = async (req, res) => {
     const newSKU = new Sku({
       skuCode,
       materialCode: material.code,
-      color: color.innerColor,
+      color_i: color.innerColor,
+      color_o: color.outerColor,
+      color_r: color.rimColor,
       typeCode: type.code,
       productName: product.name,
     });
@@ -269,15 +271,26 @@ export const updateProduct = async (req, res) => {
     if (existProduct && existProduct._id.toString() !== id) {
       return res.status(409).json({ message: "Product name exists" });
     }
+    const oldProduct = await Product.findById(id);
+    if (!oldProduct) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+    const oldName = oldProduct.name;
 
     const product = await Product.findByIdAndUpdate(
       id,
       { name },
       { new: true }
     );
+    await Sku.updateMany({ productName: oldName }, { productName: name });
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
+    await ExistingSku.updateMany(
+      {name: oldName},
+      {name: name}
+    );
+
     res.status(200).json({
       message: "Product updated successfully",
       data: {
