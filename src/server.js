@@ -11,7 +11,7 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(cors({
-  origin: 'https://sku-generator-mu.vercel.app'
+  origin: ['https://sku-generator-mu.vercel.app', 'http://localhost:5173']
 }));
 app.use(express.json());
 
