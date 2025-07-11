@@ -8,6 +8,7 @@ import Type from "../models/Type.js";
 import Sku from "../models/Sku.js";
 import Pricing from "../models/Pricing.js";
 import ExistingSku from "../models/ExistingSku.js";
+import Counter from "../models/Counter.js";
 
 export const getCutleryColors = async (req, res) => {
   try {
@@ -151,16 +152,6 @@ export const getMaterialSkuCode = async (req, res) => {
         .status(404)
         .json({ message: "Material not found", data: material });
     }
-
-    let color = await GeneralColor.findOne({
-      material: materialName,
-      color: colour,
-    });
-    if (!color) {
-      return res.status(404).json({ message: "Color not found!", data: color });
-    }
-    let colorCode = color.code.toString().padStart(3, "0");
-
     const type = await Type.findOne({ name: typology });
     if (!type) {
       return res.status(404).json({ message: "Type not found" });
@@ -172,7 +163,25 @@ export const getMaterialSkuCode = async (req, res) => {
     }
     const designCode = product.design_code;
 
-    const skuCode = `${material.code}${colorCode}${type.code}${designCode}`;
+    let skuCode = "";
+
+    if(type.code === "FOM") {
+      skuCode = `FOM${designCode}`;
+    } else if(type.code === "BOX") {
+      skuCode = `Box${designCode}`;
+    } else { 
+      
+    let color = await GeneralColor.findOne({
+      material: materialName,
+      color: colour,
+    });
+    if (!color) {
+      return res.status(404).json({ message: "Color not found!", data: color });
+    }
+    let colorCode = color.code.toString().padStart(3, "0");
+
+      skuCode = `${material.code}${colorCode}${type.code}${designCode}`;
+    }
 
     const existingSKU = await Sku.findOne({ skuCode });
     if (existingSKU) {
@@ -181,7 +190,7 @@ export const getMaterialSkuCode = async (req, res) => {
     const newSKU = new Sku({
       skuCode,
       materialCode: material.code,
-      color: color.color,
+      color: type.code === "FOM" || type.code === "BOX" ? "" : colour,
       typeCode: type.code,
       productName: product.name,
     });
@@ -214,7 +223,19 @@ export const deleteSku = async (req, res) => {
 export const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const product = await Product.findOneAndDelete({ _id: id });
+    const product = await Product.findOne({ _id: id });
+    
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+    await Product.findOneAndDelete({ _id: id });
+    
+    const counter = await Counter.findOne({ category: product.category });
+    if (counter) {
+      counter.last_code -= 1;
+      await counter.save();
+    }
+
     res.status(200).json({ message: "Product deleted successfully", data: product });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
