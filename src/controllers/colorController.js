@@ -171,7 +171,9 @@ export const getMaterialSkuCode = async (req, res) => {
       skuCode = `Box${designCode}`;
     } else if(type.code === "WAX") {
       skuCode = `WAX${designCode}`;
-    } 
+    } else if(type.code === "KIT") {
+      skuCode = `KIT${designCode}`;
+    }
     else { 
     let color = await GeneralColor.findOne({
       material: materialName,
