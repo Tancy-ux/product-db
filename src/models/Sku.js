@@ -8,6 +8,10 @@ const skuSchema = new mongoose.Schema({
     typeCode: String,
     skuCode: String,
     productName: String,
+    shopifyProductId: String,
+    shopifyVariantId: String,
+    shopifyAdminUrl: String,
+    shopifySyncedAt: Date,
 });
 
 const Sku = mongoose.model("Sku", skuSchema);

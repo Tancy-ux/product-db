@@ -1,5 +1,6 @@
 import e from "express";
 import { getColorCode, addMaterial, addType, getSKUCode, getAllMaterials, getAllTypes, getAllColors, addNewColorCode, addProduct, getProductsByCategory, getDesignCode, updateProduct, getAllCodes, getOldSkuCodes, editOldSku } from "../controllers/skuController.js";
+import { createShopifyProduct, getShopifyPublications } from "../controllers/shopifyController.js";
 import { addBaseColor, addColorByMaterial, addGeneralColor, addPricing, deletePricing, deleteProduct, deleteSku, getAllBase, getAllColorEntries, getColorByMaterial, getCutleryCode, getCutleryColors, getMaterialCode, getMaterialSkuCode, getPricing, newCutleryColor, updatePricing } from "../controllers/colorController.js";
 
 const router = e.Router();
@@ -22,6 +23,9 @@ router.post("/get-msku", getMaterialSkuCode);
 
 router.get("/oldsku", getOldSkuCodes);
 router.put("/edit-sku/:id", editOldSku);
+
+router.get("/shopify/publications", getShopifyPublications);
+router.post("/shopify/create-product", createShopifyProduct);
 
 router.post("/design-code", getDesignCode);
 router.post("/get-color-code", getColorCode);
