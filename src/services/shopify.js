@@ -1,11 +1,24 @@
 /**
  * Thin wrapper around the Shopify Admin GraphQL API.
  *
+ * Authentication takes whichever of two routes fits the store:
+ *
+ *   1. SHOPIFY_ADMIN_TOKEN — an offline shpat_ token from the authorization
+ *      code grant (scripts/get-token.js). This is the route for a store that
+ *      is NOT in the app's Dev Dashboard organization, which covers any
+ *      ordinary production store. The token does not expire.
+ *
+ *   2. Client credentials grant — used automatically when no token is set.
+ *      Only works when the app and the store belong to the same Shopify
+ *      organization; otherwise Shopify answers "shop_not_permitted". These
+ *      tokens expire, so they are fetched on demand and cached in memory
+ *      until shortly before expiry.
+ *
  * Required env vars (backend/.env):
  *   SHOPIFY_STORE_DOMAIN   e.g. your-store.myshopify.com
- *   SHOPIFY_ADMIN_TOKEN    Admin API access token of a custom app
- *                          (scopes: write_products, read_products,
- *                                   write_publications, read_publications)
+ *   SHOPIFY_ADMIN_TOKEN    offline token (route 1), or
+ *   SHOPIFY_API_KEY        the app's Client ID, and
+ *   SHOPIFY_API_SECRET     the app's shpss_... Client secret  (route 2)
  * Optional:
  *   SHOPIFY_API_VERSION        defaults to 2026-01
  *   SHOPIFY_VENDOR             vendor written on every product
@@ -17,23 +30,90 @@ const API_VERSION = process.env.SHOPIFY_API_VERSION || "2026-01";
 
 const DEFAULT_PUBLICATIONS = ["Point of Sale"];
 
+// Refresh a little early so a token can't expire mid-request.
+const TOKEN_EXPIRY_MARGIN_MS = 60_000;
+
 // Publications rarely change, so resolve their ids once per process.
 let publicationCache = null;
 
+// { token, expiresAt } — expiresAt is null for tokens that never expire.
+let tokenCache = null;
+
 const config = () => {
   const domain = process.env.SHOPIFY_STORE_DOMAIN;
-  const token = process.env.SHOPIFY_ADMIN_TOKEN;
 
-  if (!domain || !token) {
-    throw new Error(
-      "Shopify is not configured. Set SHOPIFY_STORE_DOMAIN and SHOPIFY_ADMIN_TOKEN."
-    );
+  if (!domain) {
+    throw new Error("Shopify is not configured. Set SHOPIFY_STORE_DOMAIN.");
   }
-  return { domain, token };
+  return { domain };
 };
 
-export const shopifyGraphQL = async (query, variables = {}) => {
-  const { domain, token } = config();
+/** Exchanges the app's client credentials for an Admin API access token. */
+const requestAccessToken = async () => {
+  const { domain } = config();
+  const clientId = process.env.SHOPIFY_API_KEY;
+  const clientSecret = process.env.SHOPIFY_API_SECRET;
+
+  if (!clientId || !clientSecret) {
+    throw new Error(
+      "Shopify is not configured. Set SHOPIFY_API_KEY and SHOPIFY_API_SECRET " +
+        "(or a ready-made SHOPIFY_ADMIN_TOKEN)."
+    );
+  }
+
+  const res = await fetch(`https://${domain}/admin/oauth/access_token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "client_credentials",
+      client_id: clientId,
+      client_secret: clientSecret,
+    }).toString(),
+  });
+
+  const text = await res.text();
+  let body = null;
+  try {
+    body = JSON.parse(text);
+  } catch {
+    // Shopify answers with an HTML error page for things like a missing install.
+    if (/app_not_installed/.test(text)) {
+      throw new Error(
+        `The app is not installed on ${domain}. Install it on the store from ` +
+          `the Shopify Dev Dashboard, then try again.`
+      );
+    }
+    throw new Error(`Could not get a Shopify access token (HTTP ${res.status}).`);
+  }
+
+  if (!res.ok || !body?.access_token) {
+    const detail = body?.error_description || body?.error || `HTTP ${res.status}`;
+    throw new Error(`Could not get a Shopify access token: ${detail}`);
+  }
+
+  return {
+    token: body.access_token,
+    expiresAt: body.expires_in
+      ? Date.now() + body.expires_in * 1000 - TOKEN_EXPIRY_MARGIN_MS
+      : null,
+  };
+};
+
+const getAccessToken = async () => {
+  const explicit = process.env.SHOPIFY_ADMIN_TOKEN;
+  if (explicit) return explicit;
+
+  if (tokenCache && (tokenCache.expiresAt === null || Date.now() < tokenCache.expiresAt)) {
+    return tokenCache.token;
+  }
+
+  tokenCache = await requestAccessToken();
+  return tokenCache.token;
+};
+
+export const shopifyGraphQL = async (query, variables = {}, { retryOn401 = true } = {}) => {
+  const { domain } = config();
+  const token = await getAccessToken();
 
   const res = await fetch(`https://${domain}/admin/api/${API_VERSION}/graphql.json`, {
     method: "POST",
@@ -43,6 +123,12 @@ export const shopifyGraphQL = async (query, variables = {}) => {
     },
     body: JSON.stringify({ query, variables }),
   });
+
+  // A cached token can still be revoked or expire early; drop it and retry once.
+  if (res.status === 401 && retryOn401 && !process.env.SHOPIFY_ADMIN_TOKEN) {
+    tokenCache = null;
+    return shopifyGraphQL(query, variables, { retryOn401: false });
+  }
 
   const body = await res.json().catch(() => null);
 
@@ -60,6 +146,7 @@ const PUBLICATIONS_QUERY = `
     publications(first: 50) {
       nodes {
         id
+        name
         catalog {
           title
         }
@@ -70,9 +157,11 @@ const PUBLICATIONS_QUERY = `
 
 export const listPublications = async () => {
   const data = await shopifyGraphQL(PUBLICATIONS_QUERY);
+  // Channel publications expose their label on `name`; catalog-backed ones
+  // carry it on the catalog instead.
   return data.publications.nodes.map((node) => ({
     id: node.id,
-    name: node.catalog?.title || "",
+    name: node.name || node.catalog?.title || "",
   }));
 };
 
