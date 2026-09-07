@@ -252,7 +252,9 @@ export const createProductForSku = async ({
         optionValues: [{ optionName: "Title", name: "Default Title" }],
         sku: skuCode,
         price: String(price ?? 0),
-        inventoryItem: { tracked: false },
+        // Track stock, and stop the variant selling once it hits zero.
+        inventoryItem: { tracked: true },
+        inventoryPolicy: "DENY",
       },
     ],
   };
