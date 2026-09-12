@@ -111,7 +111,13 @@ const getAccessToken = async () => {
   return tokenCache.token;
 };
 
-export const shopifyGraphQL = async (query, variables = {}, { retryOn401 = true } = {}) => {
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+export const shopifyGraphQL = async (
+  query,
+  variables = {},
+  { retryOn401 = true, retriesLeft = 3 } = {}
+) => {
   const { domain } = config();
   const token = await getAccessToken();
 
@@ -127,7 +133,7 @@ export const shopifyGraphQL = async (query, variables = {}, { retryOn401 = true 
   // A cached token can still be revoked or expire early; drop it and retry once.
   if (res.status === 401 && retryOn401 && !process.env.SHOPIFY_ADMIN_TOKEN) {
     tokenCache = null;
-    return shopifyGraphQL(query, variables, { retryOn401: false });
+    return shopifyGraphQL(query, variables, { retryOn401: false, retriesLeft });
   }
 
   const body = await res.json().catch(() => null);
@@ -135,6 +141,13 @@ export const shopifyGraphQL = async (query, variables = {}, { retryOn401 = true 
   if (!res.ok || !body) {
     throw new Error(`Shopify API error (HTTP ${res.status})`);
   }
+
+  const isThrottled = body.errors?.some((e) => e.extensions?.code === "THROTTLED");
+  if (isThrottled && retriesLeft > 0) {
+    await sleep(1000);
+    return shopifyGraphQL(query, variables, { retryOn401, retriesLeft: retriesLeft - 1 });
+  }
+
   if (body.errors?.length) {
     throw new Error(body.errors.map((e) => e.message).join("; "));
   }
@@ -318,4 +331,57 @@ export const findProductBySku = async (skuCode) => {
       .split("/")
       .pop()}`,
   };
+};
+
+/** Looks up many SKUs in one request instead of one round-trip each. */
+const PRODUCT_VARIANTS_BY_SKUS_QUERY = `
+  query ProductVariantsBySkus($query: String!, $first: Int!) {
+    productVariants(first: $first, query: $query) {
+      nodes {
+        id
+        sku
+        product {
+          id
+        }
+      }
+    }
+  }
+`;
+
+// Keeps each query's `sku:'A' OR sku:'B' OR ...` string comfortably under
+// Shopify's search query length limit and the request cheap enough to avoid
+// GraphQL cost throttling.
+const SKU_LOOKUP_CHUNK_SIZE = 25;
+
+/**
+ * Given a list of SKU codes, returns a Map of the ones that already have a
+ * matching product on Shopify to { productId, variantId, adminUrl }. Codes
+ * with no match are simply absent from the map.
+ */
+export const findProductsBySkus = async (skuCodes) => {
+  const found = new Map();
+  const codes = [...new Set(skuCodes.filter(Boolean))];
+
+  for (let i = 0; i < codes.length; i += SKU_LOOKUP_CHUNK_SIZE) {
+    const chunk = codes.slice(i, i + SKU_LOOKUP_CHUNK_SIZE);
+    const query = chunk.map((code) => `sku:'${code}'`).join(" OR ");
+
+    const data = await shopifyGraphQL(PRODUCT_VARIANTS_BY_SKUS_QUERY, {
+      query,
+      first: chunk.length,
+    });
+
+    for (const node of data.productVariants.nodes) {
+      if (!node.sku) continue;
+      found.set(node.sku, {
+        productId: node.product.id,
+        variantId: node.id,
+        adminUrl: `https://${config().domain}/admin/products/${node.product.id
+          .split("/")
+          .pop()}`,
+      });
+    }
+  }
+
+  return found;
 };
